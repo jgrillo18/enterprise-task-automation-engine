@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── 1. Lint & syntax check ──────────────────────────────────────────────
+  lint:
+    name: Lint & syntax check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8
+
+      - name: Flake8 lint (errors only)
+        run: |
+          # Stop the build on syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics \
+            --exclude=.venv,__pycache__
+
+      - name: Verify all modules import correctly
+        run: |
+          python -c "
+          from engine.task_registry import register_tasks, get_task
+          from engine.executor import execute_task
+          from engine.store import record_execution
+          from engine.scheduler import load_tasks
+          from tasks.report_task import run_report
+          from tasks.sync_task import run_sync
+          from tasks.backup_task import run_backup
+          from tasks.cleanup_task import run_cleanup
+          from tasks.health_check_task import run_health_check
+          print('All modules imported successfully')
+          "
+
+  # ── 2. Docker build check ────────────────────────────────────────────────
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: enterprise-task-engine:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
