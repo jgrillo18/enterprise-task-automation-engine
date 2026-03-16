@@ -1,0 +1,21 @@
+tasks:
+
+  # Generates a CSV report with execution stats for all tasks
+  - name: report_task
+    interval_seconds: 60
+
+  # Syncs files from data/source/ to data/synced/
+  - name: sync_task
+    interval_seconds: 90
+
+  # Creates a timestamped zip backup of the logs/ folder
+  - name: backup_task
+    interval_seconds: 180
+
+  # Deletes log/report files older than 7 days
+  - name: cleanup_task
+    interval_seconds: 300
+
+  # HTTP health check for Google, GitHub and PyPI
+  - name: health_check_task
+    interval_seconds: 45

@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  task-engine:
+    build: .
+    container_name: enterprise-task-engine
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs       # Persist logs outside the container
+      - ./config:/app/config   # Hot-reload config without rebuilding
+    environment:
+      - PYTHONUNBUFFERED=1     # Ensure stdout is flushed immediately
