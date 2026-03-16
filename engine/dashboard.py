@@ -306,7 +306,20 @@ def api_logs() -> Response:
 # Start in a daemon thread
 # ---------------------------------------------------------------------------
 
-def start_dashboard(host: str = "0.0.0.0", port: int = 8080) -> None:
+@app.route("/health")
+def health() -> Response:
+    """Health check endpoint used by Render and load balancers."""
+    return jsonify({"status": "ok"})
+
+
+# ---------------------------------------------------------------------------
+# Start in a daemon thread
+# ---------------------------------------------------------------------------
+
+def start_dashboard(host: str = "0.0.0.0", port: int = None) -> None:
+    import os
+    if port is None:
+        port = int(os.environ.get("PORT", 8080))
     _setup_log_handler()
     t = threading.Thread(
         target=lambda: app.run(host=host, port=port, use_reloader=False),
